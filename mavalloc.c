@@ -21,6 +21,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+/*
+PARTITION SCHEMES
+
+1. FIRST_FIT - Partition is allocated which is first sufficient from the beggining of memory list
+2. BEST_FIT - Allocates the process to the partition which the first smallest sufficient available
+3. NEXT_FIT - Looks for the next partition after the previous allocation success
+4. WORST_FIT - Allocate the process to the parition which is the largest sufficient available
+*/
+
 #include "mavalloc.h"
 #include <stdlib.h>
 
