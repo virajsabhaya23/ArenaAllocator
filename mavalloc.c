@@ -22,11 +22,35 @@
 // THE SOFTWARE.
 
 #include "mavalloc.h"
+#include <stdlib.h>
+
+typedef struct memory_nodes {
+  char node_type;
+  int start;
+  int length;
+  struct memory_nodes* next;
+} memory_nodes;
+
+
 
 int mavalloc_init( size_t size, enum ALGORITHM algorithm )
 {
+  //You can't allocate a size less than 0, code must break in this mistake
+  if( size < 0){
+    return -1;
+  }
+  memory_nodes* new_node = (memory_nodes*)malloc(sizeof(memory_nodes));
+  
+  /*
+  Can't continue with program if the main initialization of the linked list failed, 
+  code must break
+  */
+  if(new_node){
+    return -1;
+  }
   return 0;
 }
+
 
 void mavalloc_destroy( )
 {
