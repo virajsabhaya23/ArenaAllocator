@@ -32,31 +32,54 @@ PARTITION SCHEMES
 
 #include "mavalloc.h"
 #include <stdlib.h>
+#include <stdio.h>
+#include <limits.h>
+
+enum TYPE {
+  FREE = 0,
+  USED
+};
 
 typedef struct memory_nodes {
-  char node_type;
+  enum TYPE node_type;
   int start;
-  int length;
+  size_t size;
+  void* arena;
   struct memory_nodes* next;
 } memory_nodes;
 
+memory_nodes* memory_list = NULL;
+//memory_nodes* previous_node;
 
+void *arena;
+enum ALGORITHM allocation_algorithm = FIRST_FIT;
 
 int mavalloc_init( size_t size, enum ALGORITHM algorithm )
 {
-  //You can't allocate a size less than 0, code must break in this mistake
+  arena = malloc(ALIGN4(size));
+  allocation_algorithm = algorithm;
+
   if( size < 0){
     return -1;
   }
-  memory_nodes* new_node = (memory_nodes*)malloc(sizeof(memory_nodes));
-  
   /*
   Can't continue with program if the main initialization of the linked list failed, 
   code must break
   */
+  memory_nodes* new_node = (memory_nodes*)malloc(sizeof(memory_nodes));
   if(new_node){
     return -1;
   }
+
+  //Initializing the head
+  memory_nodes* new_node = (memory_nodes*)malloc(sizeof(memory_nodes));
+  memory_list -> arena = arena;
+  memory_list -> node_type = FREE;
+  memory_list -> start = 0;
+  memory_list -> size = ALIGN4( size );
+  memory_list -> next = NULL;
+  
+
   return 0;
 }
 
@@ -80,6 +103,8 @@ void mavalloc_free( void * ptr )
 int mavalloc_size( )
 {
   int number_of_nodes = 0;
+
+  // memory_list* curr = arena;
 
   return number_of_nodes;
 }
