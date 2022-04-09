@@ -1,3 +1,9 @@
+/*
+  GROUP NAME : GoScooters
+  MEMBERS : Kennedy Mosoti (ID : )
+            Viraj Sabhaya (ID : 1001828871)
+*/
+
 // The MIT License (MIT)
 // 
 // Copyright (c) 2022 Trevor Bakker 
@@ -46,10 +52,11 @@ typedef struct memory_nodes {
   size_t size;
   void* arena;
   struct memory_nodes* next;
+  struct memory_nodes* prev;
 } memory_nodes;
 
 memory_nodes* memory_list = NULL;
-//memory_nodes* previous_node;
+memory_nodes* previous_node;
 
 void *arena;
 enum ALGORITHM allocation_algorithm = FIRST_FIT;
@@ -71,28 +78,59 @@ int mavalloc_init( size_t size, enum ALGORITHM algorithm )
     return -1;
   }
 
-  //Initializing the head
-  memory_nodes* new_node = (memory_nodes*)malloc(sizeof(memory_nodes));
+  //Initializing the header of the list where the first node is the max size asked for
   memory_list -> arena = arena;
   memory_list -> node_type = FREE;
   memory_list -> start = 0;
   memory_list -> size = ALIGN4( size );
   memory_list -> next = NULL;
   
-
   return 0;
 }
 
 
-void mavalloc_destroy( )
+void mavalloc_destroy()
 {
+
+  //Recursive
+  if(memory_list->next != NULL){
+    mavalloc_destroy(memory_list->next);
+  }
+  free(memory_list);
+  free(arena);
   return;
 }
 
 void * mavalloc_alloc( size_t size )
 {
-  // only return NULL on failure
+  memory_list* alloc_node;
+  
+  if(allocation_algorithm == FIRST_FIT){
+    //Allocation Scheme FIRST_FIT Algorithm
+  }
+  else if(allocation_algorithm == BEST_FIT){
+    //Allocation Scheme BEST_FIT Algorithm
+  }
+  else if(allocation_algorithm == NEXT_FIT){
+    //Allocation Scheme NEXT_FIT Algorithm
+  }
+  else if(allocation_algorithm == WORST_FIT){
+    //Allocation Scheme WORST_FIT Algorithm
+  }
   return NULL;
+}
+
+int first_fit(){
+  
+}
+int next_fit(){
+  
+}
+int best_fit(){
+  
+}
+int worst_fit(){
+  
 }
 
 void mavalloc_free( void * ptr )
