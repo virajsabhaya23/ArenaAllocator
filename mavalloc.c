@@ -56,7 +56,7 @@ typedef struct memory_nodes {
 } memory_nodes;
 
 memory_nodes* memory_list = NULL;
-memory_nodes* previous_node;
+memory_nodes* previous_node = NULL;
 
 void *arena;
 enum ALGORITHM allocation_algorithm = FIRST_FIT;
@@ -73,8 +73,8 @@ int mavalloc_init( size_t size, enum ALGORITHM algorithm )
   Can't continue with program if the main initialization of the linked list failed, 
   code must break
   */
-  memory_nodes* new_node = (memory_nodes*)malloc(sizeof(memory_nodes));
-  if(new_node){
+  memory_list = (memory_nodes*)malloc(sizeof(memory_nodes));
+  if(memory_list){
     return -1;
   }
 
@@ -84,6 +84,7 @@ int mavalloc_init( size_t size, enum ALGORITHM algorithm )
   memory_list -> start = 0;
   memory_list -> size = ALIGN4( size );
   memory_list -> next = NULL;
+  memory_list -> prev = NULL;
   
   return 0;
 }
@@ -91,19 +92,22 @@ int mavalloc_init( size_t size, enum ALGORITHM algorithm )
 
 void mavalloc_destroy()
 {
-
-  //Recursive
-  if(memory_list->next != NULL){
-    mavalloc_destroy(memory_list->next);
-  }
-  free(memory_list);
   free(arena);
+
+  void* target;
+  //Iterative loop that goes through the list deleting each node until the end
+  while(memory_list != NULL){
+    target = memory_list;
+    memory_list = memory_list->next;
+    free(target);
+  }
+  
   return;
 }
 
 void * mavalloc_alloc( size_t size )
 {
-  memory_list* alloc_node;
+  memory_nodes* alloc_node = NULL;
   
   if(allocation_algorithm == FIRST_FIT){
     //Allocation Scheme FIRST_FIT Algorithm
@@ -120,6 +124,59 @@ void * mavalloc_alloc( size_t size )
   return NULL;
 }
 
+void mavalloc_free( void * ptr )
+{
+  //Casts void pointer to memory_nodes type
+  memory_nodes* target = (memory_nodes*)ptr;
+
+  //Checking if the passed pointer is null
+  if(target == NULL){
+    return -1;
+  }
+
+  //Checking if the node has already been freed
+  if(target->node_type == FREE){
+    return;
+  }
+
+  /*
+  Loop through memory_list looking for the matching node. Program will swap the nodetype 
+  to free and coelesce the next free node and append it to it's size and delete the 
+  succeding node.
+  */
+  memory_nodes* curr = memory_list;
+  while(curr!=NULL){
+    if(curr == target){
+      target->node_type = FREE;
+      if(target->next!= NULL && target->next->node_type == FREE){
+        target->size += target->next->size;
+        target->next = target->next->next;
+        free(target->next);
+      }
+      break;
+    }
+    //prev = curr;
+    curr = curr->next;
+  }
+
+  return;
+}
+
+int mavalloc_size( )
+{
+  int number_of_nodes = 0;
+
+  //Iterative loop that counts each node untill it hits the end of the list
+  memory_nodes* head = memory_list;
+  while(head != NULL){
+    head = head->next;
+    number_of_nodes++;
+  }
+
+  return number_of_nodes;
+}
+
+
 int first_fit(){
   
 }
@@ -131,18 +188,4 @@ int best_fit(){
 }
 int worst_fit(){
   
-}
-
-void mavalloc_free( void * ptr )
-{
-  return;
-}
-
-int mavalloc_size( )
-{
-  int number_of_nodes = 0;
-
-  // memory_list* curr = arena;
-
-  return number_of_nodes;
 }
