@@ -156,7 +156,7 @@ void mavalloc_free( void * ptr )
       //free(target);
       target = previous_temp;
     }
-    printf()
+    printf("\n");
   }
   if(target->next != NULL && target->next->node_type == FREE){
     target->size = target->size + target->next->size;
