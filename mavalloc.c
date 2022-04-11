@@ -96,9 +96,7 @@ void mavalloc_destroy()
 }
 
 void * mavalloc_alloc( size_t size )
-{
-  size_t requested_size = ALIGN4(size);
-  
+{  
   memory_node* node = NULL;
 
   if(allocation_algorithm != NEXT_FIT){
@@ -148,6 +146,9 @@ void * mavalloc_alloc( size_t size )
 
   else if(allocation_algorithm == NEXT_FIT)
   {
+    if(node->next == NULL){
+      node = head_of_memory;
+    }
     while(node != NULL)
       {    
           if(node->size >= aligned_size && node->node_type==FREE)
@@ -212,6 +213,17 @@ void * mavalloc_alloc( size_t size )
 
   else if(allocation_algorithm == BEST_FIT)
   {
+    memory_node* best_node = NULL;
+    size_t min_size = aligned_size;
+
+    while(node != NULL){
+      if(node->node_type == FREE && node->size >= aligned_size && node->size <= min_size){
+        min_size = node->size;
+      }
+      node = node->next;
+    }
+    printf("\nAllocating %zu to Min_size: %zu\n", aligned_size,min_size);
+    node = head_of_memory;
     while(node != NULL)
       {    
           if(node->size >= aligned_size && node->node_type==FREE)
@@ -248,37 +260,37 @@ void * mavalloc_alloc( size_t size )
 
 void mavalloc_free( void * ptr )
 {
-  //memory_node* target_node = (memory_node*)ptr;
+  //courtesy of Professor Bakker
+  memory_node* target = head_of_memory;
 
-  if(ptr==NULL) return;
-  
-  memory_node* curr = head_of_memory;
-  memory_node* target = NULL;
-  
-  while(curr != NULL){
-      if(curr->start_address == ptr){
-        target = curr;
-        break;
-      }
-      curr = curr->next;
-  }
-
-  if(target->prev != NULL && target->prev->node_type == FREE){
-    memory_node* previous_temp = target->prev;
-    if(previous_temp->prev != NULL ){
-      previous_temp->size = previous_temp->size + target->size;
-      previous_temp->next = target->next;
-      //free(target);
-      target = previous_temp;
+  //Find the block address in linked list and free it
+  while(target != NULL){
+    if(target->start_address == ptr )
+    {
+      target->node_type = FREE;
+      break;
     }
-  }
-  if(target->next != NULL && target->next->node_type == FREE){
-    target->size = target->size + target->next->size;
-    target->next = target->next->next;
-    //free(target->next);
+    target = target->next;
   }
 
-  //print_memory();
+  //Reset target for another loop
+  target = head_of_memory;
+
+  //
+  while(target != NULL)
+  {
+    //If the next node is free, this block adds the sizes and deletes the next node.
+    if(target->next && target->node_type == FREE && target->next ->node_type == FREE  )
+    {
+      memory_node* previous = target->next;
+      target->size = target->size + target -> next->size;
+      target->next = target->next->next;
+      free(previous);
+      //Ensures that if a recently coelesced hole can be coelesced to another subsequent hole
+      continue;
+    }
+    target = target -> next;
+  }
   return;
 }
 
@@ -293,7 +305,8 @@ int mavalloc_size( )
     head = head->next;
     number_of_nodes++;
   }
-
+  printf("\nSize = %d\n",number_of_nodes);
+  print_memory();
   return number_of_nodes;
 }
 
