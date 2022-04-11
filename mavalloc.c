@@ -222,7 +222,7 @@ void print_memory( )
             "node_type = %d, "
             "arena = %x, "
             "next->%x",
-            node_counter, *head, head->size, head->node_type, head->start_address, head->next
+            node_counter, head, head->size, head->node_type, head->start_address, head->next
     );
     head = head->next;
     node_counter++;
