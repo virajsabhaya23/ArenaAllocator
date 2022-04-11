@@ -64,7 +64,7 @@ enum ALGORITHM allocation_algorithm = FIRST_FIT;
 int mavalloc_init( size_t size, enum ALGORITHM algorithm )
 {
   arena = malloc(ALIGN4(size));
-  allocation_algorithm = algorithm;
+  //allocation_algorithm = algorithm;
 
   if( size < 0){
     return -1;
@@ -107,10 +107,53 @@ void mavalloc_destroy()
 
 void * mavalloc_alloc( size_t size )
 {
-  memory_nodes* alloc_node = NULL;
+  memory_nodes* node = NULL;
+
+  if( allocation_algorithm != NEXT_FIT )
+  { 
+    node = memory_list;
+  }
+  else if ( allocation_algorithm == NEXT_FIT )
+  {
+    node = previous_node;
+  }
+  else
+  {
+    printf("ERROR: Unknown allocation algorithm!\n");
+    exit(0);
+  }
+
+  size_t aligned_size = ALIGN4( size );
   
   if(allocation_algorithm == FIRST_FIT){
     //Allocation Scheme FIRST_FIT Algorithm
+    while( node )
+    {
+      if( node -> size >= aligned_size  && node -> node_type == FREE )
+      {
+        int leftover_size = 0;
+  
+        node -> node_type  = USED;
+        leftover_size = node -> size - aligned_size;
+        node -> size =  aligned_size;
+  
+        if( leftover_size > 0 )
+        {
+          memory_nodes * previous_next = node -> next;
+          memory_nodes * leftover_node = ( memory_nodes* ) malloc ( sizeof( memory_nodes));
+  
+          leftover_node -> arena = node->arena;
+          leftover_node -> node_type  = FREE;
+          leftover_node -> size  = leftover_size;
+          leftover_node -> next  = previous_next;
+  
+          node -> next = leftover_node;
+        }
+        previous_node = node;
+        return ( void * ) node -> arena;
+      }
+      node = node -> next;
+    }
   }
   else if(allocation_algorithm == BEST_FIT){
     //Allocation Scheme BEST_FIT Algorithm
@@ -131,7 +174,7 @@ void mavalloc_free( void * ptr )
 
   //Checking if the passed pointer is null
   if(target == NULL){
-    return -1;
+    return;
   }
 
   //Checking if the node has already been freed
@@ -141,8 +184,8 @@ void mavalloc_free( void * ptr )
 
   /*
   Loop through memory_list looking for the matching node. Program will swap the nodetype 
-  to free and coelesce the next free node and append it to it's size and delete the 
-  succeding node.
+  to free and coelesce the next free node next to it and append it to it's size and delete 
+  the succeding node.
   */
   memory_nodes* curr = memory_list;
   while(curr!=NULL){
@@ -177,15 +220,16 @@ int mavalloc_size( )
 }
 
 
-int first_fit(){
+// int first_fit(){
   
-}
-int next_fit(){
+// }
+// int next_fit(){
   
-}
-int best_fit(){
+// }
+// int best_fit(){
   
-}
-int worst_fit(){
+// }
+// int worst_fit(){
   
-}
+// }
+
