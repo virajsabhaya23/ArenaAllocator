@@ -118,14 +118,16 @@ void * mavalloc_alloc( size_t size )
   {
       while(node != NULL)
       {    
-          if(node->size >= aligned_size && node->node_type==FREE){
+          if(node->size >= aligned_size && node->node_type==FREE)
+          {
               size_t leftover_size = 0;
 
               node->node_type = USED;
               leftover_size = node->size - aligned_size;
               node->size = aligned_size;
               
-              if(leftover_size > 0){
+              if(leftover_size > 0)
+              {
                   memory_node* previous_next = node->next;
                   memory_node* previous_prev = node->prev;
                   memory_node* leftover_node = newNode(
@@ -148,14 +150,16 @@ void * mavalloc_alloc( size_t size )
   {
     while(node != NULL)
       {    
-          if(node->size >= aligned_size && node->node_type==FREE){
+          if(node->size >= aligned_size && node->node_type==FREE)
+          {
               size_t leftover_size = 0;
 
               node->node_type = USED;
               leftover_size = node->size - aligned_size;
               node->size = aligned_size;
               
-              if(leftover_size > 0){
+              if(leftover_size > 0)
+              {
                   memory_node* previous_next = node->next;
                   memory_node* previous_prev = node->prev;
                   memory_node* leftover_node = newNode(
@@ -176,10 +180,66 @@ void * mavalloc_alloc( size_t size )
 
   else if(allocation_algorithm == WORST_FIT)
   {
+    while(node != NULL)
+      {    
+          if(node->size >= aligned_size && node->node_type==FREE)
+          {
+              size_t leftover_size = 0;
+
+              node->node_type = USED;
+              leftover_size = node->size - aligned_size;
+              node->size = aligned_size;
+              
+              if(leftover_size > 0)
+              {
+                  memory_node* previous_next = node->next;
+                  memory_node* previous_prev = node->prev;
+                  memory_node* leftover_node = newNode(
+                                    FREE, 
+                                    (size_t*)node->start_address+aligned_size, 
+                                    leftover_size,
+                                    previous_next, 
+                                    previous_prev
+                                    );
+                  node->next = leftover_node;
+              }
+              previous_node = node;
+              return (void*)node->start_address;
+          }
+          node = node->next;
+      }
   }
 
   else if(allocation_algorithm == BEST_FIT)
   {
+    while(node != NULL)
+      {    
+          if(node->size >= aligned_size && node->node_type==FREE)
+          {
+              size_t leftover_size = 0;
+
+              node->node_type = USED;
+              leftover_size = node->size - aligned_size;
+              node->size = aligned_size;
+              
+              if(leftover_size > 0)
+              {
+                  memory_node* previous_next = node->next;
+                  memory_node* previous_prev = node->prev;
+                  memory_node* leftover_node = newNode(
+                                    FREE, 
+                                    (size_t*)node->start_address+aligned_size, 
+                                    leftover_size,
+                                    previous_next, 
+                                    previous_prev
+                                    );
+                  node->next = leftover_node;
+              }
+              previous_node = node;
+              return (void*)node->start_address;
+          }
+          node = node->next;
+      }
   }
 
 
@@ -228,7 +288,8 @@ int mavalloc_size( )
 
   //Iterative loop that counts each node untill it hits the end of the list
   memory_node* head = head_of_memory;
-  while(head != NULL){
+  while(head != NULL)
+  {
     head = head->next;
     number_of_nodes++;
   }
@@ -241,7 +302,8 @@ void print_memory( )
   int node_counter = 0;
   //Iterative loop that counts each node untill it hits the end of the list
   memory_node* head = head_of_memory;
-  while(head != NULL){
+  while(head != NULL)
+  {
     printf("\n---------\nNode[%d]: "
             "Address = %x, "
             "size = %zu, "
