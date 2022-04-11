@@ -113,36 +113,14 @@ void * mavalloc_alloc( size_t size )
   }
 
   size_t aligned_size = ALIGN4(size);
+  
 
-  if(size_mem == 1 && allocation_algorithm == BEST_FIT){
-    if(node->node_type==FREE && node->size >= aligned_size){
-      size_t leftover_size = 0;
-
-      node->node_type = USED;
-      leftover_size = node->size - aligned_size;
-      node->size = aligned_size;
-      
-      if(leftover_size > 0)
-      {
-          memory_node* previous_next = node->next;
-          memory_node* previous_prev = node->prev;
-          memory_node* leftover_node = newNode(
-                            FREE, 
-                            (size_t*)node->start_address+aligned_size, 
-                            leftover_size,
-                            previous_next, 
-                            previous_prev
-                            );
-          node->next = leftover_node;
-      }
-      previous_node = node;
-      print_memory();
-      return (void*)node->start_address;
-    }
-    return NULL;
+  if(aligned_size == max_size){
+    node->node_type == USED;
+    //printf("\nequal? %d", aligned_size == max_size);
+    return node;
   }
-
-  if(allocation_algorithm == FIRST_FIT)
+  else if(allocation_algorithm == FIRST_FIT)
   {
       while(node != NULL)
       {    
@@ -246,7 +224,7 @@ void * mavalloc_alloc( size_t size )
   size_t min_size = max_size;
   if(allocation_algorithm == BEST_FIT)
   {
-
+    //printf("\nequal? %d", aligned_size == max_size);
     int size_mem = mavalloc_size();
     while(node != NULL)
     {
@@ -298,7 +276,6 @@ void * mavalloc_alloc( size_t size )
 
 void mavalloc_free( void * ptr )
 {
-  //courtesy of Professor Bakker
   memory_node* target = head_of_memory;
 
   //Find the block address in linked list and free it
@@ -353,6 +330,7 @@ void print_memory( )
   int node_counter = 0;
   //Iterative loop that counts each node untill it hits the end of the list
   memory_node* head = head_of_memory;
+  //Basically visuallizes the state of the arena and it's holes
   printf("\nArena Size: %zu\n", max_size);
   while(head != NULL)
   {
