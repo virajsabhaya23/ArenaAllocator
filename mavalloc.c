@@ -33,11 +33,18 @@
 #include <stdio.h>
 #include <limits.h>
 
+/*
+Enumeration type used to keep track of 
+memory_nodes and whether they're allocated or not
+*/
 enum TYPE {
   FREE = 0,
   USED
 };
-
+/*
+Structure defined as memory_node is used to keep track of 
+the information of each node in a linked list
+*/
 typedef struct memory_node {
   enum TYPE node_type;
   void* start_address;
@@ -46,14 +53,23 @@ typedef struct memory_node {
   struct memory_node* prev;
 } memory_node;
 
+/* 
+Declaring global variables
+Default algorithm set to FIRST_FIT
+Setting the head nodes NULL
+*/
 memory_node* head_of_memory = NULL;
 memory_node* previous_node = NULL;
 size_t max_size = 0;
 void* start_address = NULL;
 enum ALGORITHM allocation_algorithm = FIRST_FIT;
 
+/* 
+Prototyping the print_memory( ) method
+*/
 void print_memory( );
 
+//Function that initializes a new memory node and returns it's pointer to the caller
 memory_node* newNode(enum TYPE mem_type, void* address, size_t size, memory_node* next, memory_node* prev){
 
   memory_node* new_node = (memory_node*)malloc(sizeof(memory_node));
@@ -66,10 +82,7 @@ memory_node* newNode(enum TYPE mem_type, void* address, size_t size, memory_node
   return new_node;
 }
 
-// void freeNode(memory_node){
-  
-// }
-
+//Initializes the memory list
 int mavalloc_init( size_t size, enum ALGORITHM algorithm )
 {
   start_address = malloc(ALIGN4(size));
@@ -82,6 +95,7 @@ int mavalloc_init( size_t size, enum ALGORITHM algorithm )
   return 0;
 }
 
+//Frees all memory
 void mavalloc_destroy()
 {
   free(start_address);
@@ -97,13 +111,21 @@ void mavalloc_destroy()
   return;
 }
 
+/*
+  Allocation function that implements the 4 allocation schemes: 
+    FIRST_FIT, NEXT_FIT, BEST_FIT, WORST_FIT
+
+  NOTE: In the case of an allocation attempt where the requested size is the same as the
+  the first node and there is only 1 node. Program will simply just update that node to USED
+*/
 void * mavalloc_alloc( size_t size )
 {  
   memory_node* node = NULL;
-  int size_mem = mavalloc_size();
+  int size_mem = mavalloc_size(); //Stores the nodecount of the memory list
   if(allocation_algorithm != NEXT_FIT){
       node = head_of_memory;
   }
+  //If NEXT_FIT algorithm, program allocations starting from previous_node
   else if(allocation_algorithm == NEXT_FIT){
       node = previous_node;
   }
@@ -111,19 +133,19 @@ void * mavalloc_alloc( size_t size )
       printf("Error: Unknown Allocation Algorithm!\n");
       exit(0);
   }
-
-  size_t aligned_size = ALIGN4(size);
+  //Ensures the size input is ALIGNED
+  size_t aligned_size = ALIGN4(size); 
   
-
+  //Special case as described in the _alloc description
   if(aligned_size == max_size){
     node->node_type == USED;
-    //printf("\nequal? %d", aligned_size == max_size);
     return node;
   }
   else if(allocation_algorithm == FIRST_FIT)
   {
       while(node != NULL)
       {    
+          //checks is the node can be fitted into the hole and if it's empty.
           if(node->size >= aligned_size && node->node_type==FREE)
           {
               size_t leftover_size = 0;
@@ -148,7 +170,7 @@ void * mavalloc_alloc( size_t size )
               previous_node = node;
               return (void*)node->start_address;
           }
-          node = node->next;
+          node = node->next;  //Points to the next node in the list
       }
   }
 
@@ -156,7 +178,7 @@ void * mavalloc_alloc( size_t size )
   {
     if(node->next == NULL){
       node = head_of_memory;
-    }
+    } //Loop back to start of linkedlist incase NEXT_FIT is at the end of the list
     while(node != NULL)
       {    
           if(node->size >= aligned_size && node->node_type==FREE)
@@ -220,6 +242,7 @@ void * mavalloc_alloc( size_t size )
       }
   }
 
+  //Initialize variable to be used to track the best fit blocks
   memory_node* best_node = NULL;
   size_t min_size = max_size;
   if(allocation_algorithm == BEST_FIT)
@@ -228,8 +251,8 @@ void * mavalloc_alloc( size_t size )
     int size_mem = mavalloc_size();
     while(node != NULL)
     {
+      //Loops through entire linked list until the optimum partition is found
       size_t size_check = node -> size - size;
-
       if(node -> node_type == FREE && size_check< min_size && node->size >= aligned_size)
       {
         best_node = node;
