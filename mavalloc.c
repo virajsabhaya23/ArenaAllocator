@@ -1,3 +1,10 @@
+/*
+  GROUP NAME : GoScooters
+  
+  MEMBERS : Kennedy Mosoti (ID : 1001596311)
+            Viraj Sabhaya  (ID : 1001828871)
+*/
+
 // The MIT License (MIT)
 // 
 // Copyright (c) 2022 Trevor Bakker 
