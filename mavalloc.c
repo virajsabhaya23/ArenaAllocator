@@ -46,17 +46,17 @@ enum TYPE {
   USED
 };
 
-typedef struct memory_nodes {
+typedef struct memory_node {
   enum TYPE node_type;
   int start;
   size_t size;
   void* arena;
-  struct memory_nodes* next;
-  struct memory_nodes* prev;
-} memory_nodes;
+  struct memory_node* next;
+  struct memory_node* prev;
+} memory_node;
 
-memory_nodes* memory_list = NULL;
-memory_nodes* previous_node = NULL;
+memory_node* memory_list = NULL;
+memory_node* previous_node = NULL;
 
 void *arena;
 enum ALGORITHM allocation_algorithm = FIRST_FIT;
@@ -64,7 +64,7 @@ enum ALGORITHM allocation_algorithm = FIRST_FIT;
 int mavalloc_init( size_t size, enum ALGORITHM algorithm )
 {
   arena = malloc(ALIGN4(size));
-  //allocation_algorithm = algorithm;
+  allocation_algorithm = algorithm;
 
   if( size < 0){
     return -1;
@@ -73,7 +73,7 @@ int mavalloc_init( size_t size, enum ALGORITHM algorithm )
   Can't continue with program if the main initialization of the linked list failed, 
   code must break
   */
-  memory_list = (memory_nodes*)malloc(sizeof(memory_nodes));
+  memory_list = (memory_node*)malloc(sizeof(memory_node));
   if(memory_list){
     return -1;
   }
@@ -85,6 +85,8 @@ int mavalloc_init( size_t size, enum ALGORITHM algorithm )
   memory_list -> size = ALIGN4( size );
   memory_list -> next = NULL;
   memory_list -> prev = NULL;
+
+  previous_node = memory_list;
   
   return 0;
 }
@@ -107,7 +109,7 @@ void mavalloc_destroy()
 
 void * mavalloc_alloc( size_t size )
 {
-  memory_nodes* node = NULL;
+  memory_node* node = NULL;
 
   if( allocation_algorithm != NEXT_FIT )
   { 
@@ -139,10 +141,10 @@ void * mavalloc_alloc( size_t size )
   
         if( leftover_size > 0 )
         {
-          memory_nodes * previous_next = node -> next;
-          memory_nodes * leftover_node = ( memory_nodes* ) malloc ( sizeof( memory_nodes));
+          memory_node * previous_next = node -> next;
+          memory_node * leftover_node = ( memory_node* ) malloc ( sizeof( memory_node));
   
-          leftover_node -> arena = node->arena;
+          leftover_node -> arena = node->arena + size;
           leftover_node -> node_type  = FREE;
           leftover_node -> size  = leftover_size;
           leftover_node -> next  = previous_next;
@@ -155,9 +157,9 @@ void * mavalloc_alloc( size_t size )
       node = node -> next;
     }
   }
-  else if(allocation_algorithm == BEST_FIT){
-    //Allocation Scheme BEST_FIT Algorithm
-  }
+  // else if(allocation_algorithm == BEST_FIT){
+  //   //Allocation Scheme BEST_FIT Algorithm
+  // }
   else if(allocation_algorithm == NEXT_FIT){
     //Allocation Scheme NEXT_FIT Algorithm
   }
@@ -169,8 +171,8 @@ void * mavalloc_alloc( size_t size )
 
 void mavalloc_free( void * ptr )
 {
-  //Casts void pointer to memory_nodes type
-  memory_nodes* target = (memory_nodes*)ptr;
+  //Casts void pointer to memory_node type
+  memory_node* target = (memory_node*)ptr;
 
   //Checking if the passed pointer is null
   if(target == NULL){
@@ -187,14 +189,14 @@ void mavalloc_free( void * ptr )
   to free and coelesce the next free node next to it and append it to it's size and delete 
   the succeding node.
   */
-  memory_nodes* curr = memory_list;
+  memory_node* curr = memory_list;
   while(curr!=NULL){
-    if(curr == target){
-      target->node_type = FREE;
-      if(target->next!= NULL && target->next->node_type == FREE){
-        target->size += target->next->size;
-        target->next = target->next->next;
-        free(target->next);
+    if(curr->arena == ptr){
+      curr->node_type = FREE;
+      if(curr->next!= NULL && curr->next->node_type == FREE){
+        curr->size += curr->next->size;
+        curr->next = curr->next->next;
+        free(curr->next);
       }
       break;
     }
@@ -210,7 +212,7 @@ int mavalloc_size( )
   int number_of_nodes = 0;
 
   //Iterative loop that counts each node untill it hits the end of the list
-  memory_nodes* head = memory_list;
+  memory_node* head = memory_list;
   while(head != NULL){
     head = head->next;
     number_of_nodes++;

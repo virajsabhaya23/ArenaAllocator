@@ -113,7 +113,7 @@ void * mavalloc_alloc( size_t size )
           struct Node * previous_next = node -> next;
           struct Node * leftover_node = ( struct Node * ) malloc ( sizeof( struct Node ));
   
-          leftover_node -> arena = node -> arena + size;
+          leftover_node -> arena = node->arena - size;
           leftover_node -> type  = FREE;
           leftover_node -> size  = leftover_size;
           leftover_node -> next  = previous_next;
