@@ -1,4 +1,4 @@
-# Arena Allcator
+# Arena Allocator
 
 ### <u>Description</u> : 
 - In the glibc <code>malloc()</code> implementation <code>malloc()</code> either invokes either <code>brk()</code> or <code>mmap ()</code>
