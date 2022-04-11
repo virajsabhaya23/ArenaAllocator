@@ -100,7 +100,7 @@ void mavalloc_destroy()
 void * mavalloc_alloc( size_t size )
 {  
   memory_node* node = NULL;
-
+  int size_mem = mavalloc_size();
   if(allocation_algorithm != NEXT_FIT){
       node = head_of_memory;
   }
@@ -113,8 +113,14 @@ void * mavalloc_alloc( size_t size )
   }
 
   size_t aligned_size = ALIGN4(size);
+  
 
-  if(allocation_algorithm == FIRST_FIT)
+  if(aligned_size == max_size){
+    node->node_type == USED;
+    //printf("\nequal? %d", aligned_size == max_size);
+    return node;
+  }
+  else if(allocation_algorithm == FIRST_FIT)
   {
       while(node != NULL)
       {    
@@ -216,40 +222,14 @@ void * mavalloc_alloc( size_t size )
 
   memory_node* best_node = NULL;
   size_t min_size = max_size;
-
   if(allocation_algorithm == BEST_FIT)
   {
+    //printf("\nequal? %d", aligned_size == max_size);
     int size_mem = mavalloc_size();
-    if(size_mem == 1 && node->node_type==FREE){
-      if(node->size >= aligned_size && node->node_type==FREE){
-          
-          size_t leftover_size = 0;
-
-          node->node_type = USED;
-          leftover_size = node->size - aligned_size;
-          node->size = aligned_size;
-          
-          if(leftover_size > 0)
-          {
-              memory_node* previous_next = node->next;
-              memory_node* previous_prev = node->prev;
-              memory_node* leftover_node = newNode(
-                                FREE, 
-                                (size_t*)node->start_address+aligned_size, 
-                                leftover_size,
-                                previous_next, 
-                                previous_prev
-                                );
-              node->next = leftover_node;
-          }
-          previous_node = node;
-          return (void*)node->start_address;
-      }
-    }
-    
     while(node != NULL)
     {
-      size_t size_check = node -> size - size + ALIGN4(1);
+      size_t size_check = node -> size - size;
+
       if(node -> node_type == FREE && size_check< min_size && node->size >= aligned_size)
       {
         best_node = node;
@@ -286,7 +266,7 @@ void * mavalloc_alloc( size_t size )
           }
           node = node->next;
       }
-    return best_node;
+    return NULL;
   }
   
 
@@ -296,7 +276,6 @@ void * mavalloc_alloc( size_t size )
 
 void mavalloc_free( void * ptr )
 {
-  //courtesy of Professor Bakker
   memory_node* target = head_of_memory;
 
   //Find the block address in linked list and free it
@@ -351,13 +330,15 @@ void print_memory( )
   int node_counter = 0;
   //Iterative loop that counts each node untill it hits the end of the list
   memory_node* head = head_of_memory;
+  //Basically visuallizes the state of the arena and it's holes
+  printf("\nArena Size: %zu\n", max_size);
   while(head != NULL)
   {
     printf("\n---------\nNode[%d]: "
             "Address = %p, "
             "size = %zu, "
             "node_type = %d, "
-            "arena = %p, "
+            "start->%p, "
             "next->%p",
             node_counter, head, head->size, head->node_type, head->start_address, head->next
     );
