@@ -114,16 +114,17 @@ void * mavalloc_alloc( size_t size )
 
   size_t aligned_size = ALIGN4(size);
 
-  if(allocation_algorithm == FIRST_FIT){
-      while(node != NULL){
-          
+  if(allocation_algorithm == FIRST_FIT)
+  {
+      while(node != NULL)
+      {    
           if(node->size >= aligned_size && node->node_type==FREE){
               size_t leftover_size = 0;
 
               node->node_type = USED;
               leftover_size = node->size - aligned_size;
               node->size = aligned_size;
-
+              
               if(leftover_size > 0){
                   memory_node* previous_next = node->next;
                   memory_node* previous_prev = node->prev;
@@ -132,17 +133,31 @@ void * mavalloc_alloc( size_t size )
                                     (size_t*)node->start_address+aligned_size, 
                                     leftover_size,
                                     previous_next, 
-                                    previous_prev);
+                                    previous_prev
+                                    );
                   node->next = leftover_node;
               }
               previous_node = node;
               return (void*)node->start_address;
           }
-
           node = node->next;
       }
   }
-  else return NULL;
+
+  else if(allocation_algorithm == NEXT_FIT)
+  {
+  }
+
+  else if(allocation_algorithm == WORST_FIT)
+  {
+  }
+
+  else if(allocation_algorithm == BEST_FIT)
+  {
+  }
+
+
+  return NULL;
 }
 
 void mavalloc_free( void * ptr )
@@ -202,12 +217,12 @@ void print_memory( )
   memory_node* head = head_of_memory;
   while(head != NULL){
     printf("\n---------\nNode[%d]: "
-    "Address = %x, "
-    "size = %zu, "
-    "node_type = %d, "
-    "arena = %x, "
-    "next->%x",
-    node_counter, head, head->size, head->node_type, head->start_address, head->next
+            "Address = %x, "
+            "size = %zu, "
+            "node_type = %d, "
+            "arena = %x, "
+            "next->%x",
+            node_counter, *head, head->size, head->node_type, head->start_address, head->next
     );
     head = head->next;
     node_counter++;
