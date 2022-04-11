@@ -262,8 +262,8 @@ void * mavalloc_alloc( size_t size )
     }
     node = head_of_memory;
     while(node != NULL)
-      {    
-          if(node == best_node)
+      {    //Loops through linkedlist untill match is found
+          if(node == best_node) //Probably a less expensive way to do this. Everything else errored out
           {
               size_t leftover_size = 0;
 
