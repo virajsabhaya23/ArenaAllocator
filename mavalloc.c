@@ -48,6 +48,7 @@ typedef struct memory_node {
 
 memory_node* head_of_memory = NULL;
 memory_node* previous_node = NULL;
+size_t max_size = 0;
 void* start_address = NULL;
 enum ALGORITHM allocation_algorithm = FIRST_FIT;
 
@@ -72,6 +73,7 @@ memory_node* newNode(enum TYPE mem_type, void* address, size_t size, memory_node
 int mavalloc_init( size_t size, enum ALGORITHM algorithm )
 {
   start_address = malloc(ALIGN4(size));
+  max_size = ALIGN4(size);
   allocation_algorithm = algorithm;
 
   head_of_memory = newNode(FREE, start_address, size, NULL, NULL);
@@ -177,6 +179,7 @@ void * mavalloc_alloc( size_t size )
           }
           node = node->next;
       }
+
   }
 
   else if(allocation_algorithm == WORST_FIT)
@@ -211,22 +214,52 @@ void * mavalloc_alloc( size_t size )
       }
   }
 
-  else if(allocation_algorithm == BEST_FIT)
+  memory_node* best_node = NULL;
+  size_t min_size = max_size;
+  if(allocation_algorithm == BEST_FIT)
   {
-    memory_node* best_node = NULL;
-    size_t min_size = aligned_size;
 
-    while(node != NULL){
-      if(node->node_type == FREE && node->size >= aligned_size && node->size <= min_size){
-        min_size = node->size;
+    int size_mem = mavalloc_size();
+    if(size_mem == 1 && node->node_type==FREE){
+      if(node->size >= aligned_size && node->node_type==FREE){
+          
+          size_t leftover_size = 0;
+
+          node->node_type = USED;
+          leftover_size = node->size - aligned_size;
+          node->size = aligned_size;
+          
+          if(leftover_size > 0)
+          {
+              memory_node* previous_next = node->next;
+              memory_node* previous_prev = node->prev;
+              memory_node* leftover_node = newNode(
+                                FREE, 
+                                (size_t*)node->start_address+aligned_size, 
+                                leftover_size,
+                                previous_next, 
+                                previous_prev
+                                );
+              node->next = leftover_node;
+          }
+          previous_node = node;
+          return (void*)node->start_address;
       }
-      node = node->next;
     }
-    printf("\nAllocating %zu to Min_size: %zu\n", aligned_size,min_size);
+    while(node != NULL)
+    {
+      size_t size_check = node -> size - size + ALIGN4(1);
+      if(node -> node_type == FREE && size_check< min_size && node->size >= aligned_size)
+      {
+        best_node = node;
+        min_size = node -> size - size;
+      }
+      node = node -> next;
+    }
     node = head_of_memory;
     while(node != NULL)
       {    
-          if(node->size >= aligned_size && node->node_type==FREE)
+          if(node == best_node)
           {
               size_t leftover_size = 0;
 
@@ -252,7 +285,9 @@ void * mavalloc_alloc( size_t size )
           }
           node = node->next;
       }
+    return best_node;
   }
+  
 
 
   return NULL;
@@ -305,8 +340,8 @@ int mavalloc_size( )
     head = head->next;
     number_of_nodes++;
   }
-  printf("\nSize = %d\n",number_of_nodes);
-  print_memory();
+  //printf("\nSize = %d\n",number_of_nodes);
+  //print_memory();
   return number_of_nodes;
 }
 
