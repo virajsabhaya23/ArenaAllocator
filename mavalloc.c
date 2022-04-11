@@ -146,6 +146,32 @@ void * mavalloc_alloc( size_t size )
 
   else if(allocation_algorithm == NEXT_FIT)
   {
+    while(node != NULL)
+      {    
+          if(node->size >= aligned_size && node->node_type==FREE){
+              size_t leftover_size = 0;
+
+              node->node_type = USED;
+              leftover_size = node->size - aligned_size;
+              node->size = aligned_size;
+              
+              if(leftover_size > 0){
+                  memory_node* previous_next = node->next;
+                  memory_node* previous_prev = node->prev;
+                  memory_node* leftover_node = newNode(
+                                    FREE, 
+                                    (size_t*)node->start_address+aligned_size, 
+                                    leftover_size,
+                                    previous_next, 
+                                    previous_prev
+                                    );
+                  node->next = leftover_node;
+              }
+              previous_node = node;
+              return (void*)node->start_address;
+          }
+          node = node->next;
+      }
   }
 
   else if(allocation_algorithm == WORST_FIT)
